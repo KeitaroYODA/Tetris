@@ -1,9 +1,6 @@
 package application;
+// win10からのコミットテスト
 
-import java.util.Random;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.scene.canvas.GraphicsContext;
 
 
@@ -87,10 +84,10 @@ public class Tetris_Obj {
 
 	private String message = "ゲームタイトル";
 
-	// 0:初期表示、1:ブロック初期化、2:ブロック移動中、3:ポーズ	
+	// 0:初期表示、1:ブロック初期化、2:ブロック移動中、3:ポーズ
 	private Integer gameStatus = 1;
 	private Block block;
-	
+
 	// ブロック情報
 	private int blockWidth = 10;
 	private int blockHeight = 10;
@@ -157,7 +154,7 @@ public class Tetris_Obj {
 
 		// 領域の初期化
 		// 背景等固定の箇所は？
-		
+
 
 		// ENTER押下
 		/*
