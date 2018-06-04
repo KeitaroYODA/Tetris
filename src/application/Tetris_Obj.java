@@ -1,6 +1,9 @@
 package application;
 
+import java.io.File;
+
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 public class Tetris_Obj {
@@ -106,6 +109,9 @@ public class Tetris_Obj {
 		if (this.gameStatus == 0) {
 			this.gameStatus = 1;
 			canvas.clearRect(0, 0, GameLib.width(), GameLib.height());
+			Image img =	new Image(new File("background.png").toURI().toString());
+			canvas.drawImage(img,0, 0, GameLib.width(), GameLib.height());
+
 			mino = this.getMino();
 
 			// 次のミノ画面を表示
@@ -120,6 +126,34 @@ public class Tetris_Obj {
 		// L押下
 		if (GameLib.isKeyOn("L")) {
 			mino.turnLeft();
+		}
+
+		// ミノ落下
+		double y = mino.getMinoY() + 5;
+		if (y > GameLib.height() - 50) {
+			y = GameLib.height() - 50;
+		}
+		mino.setMinoY(y);
+
+		double x = mino.getMinoX();
+		// A押下
+		if (GameLib.isKeyOn("A")) {
+			// 左へ移動
+			x--;
+			if (x <= 0) {
+				x = 0;
+			}
+			mino.setMinoX(x);
+		}
+
+		// D押下
+		if (GameLib.isKeyOn("D")) {
+			// 右へ移動
+			x++;
+			if (x >= GameLib.width()) {
+				x = GameLib.width();
+			}
+			mino.setMinoX(x);
 		}
 
 		/*
@@ -165,17 +199,7 @@ public class Tetris_Obj {
 				break;
 			case 2:
 			// ブロック落下中
-				// A押下
-				if (GameLib.isKeyOn("A")) {
-					// 左へ移動
-					this.blockX = this.blockX - 1;
-				}
 
-				// D押下
-				if (GameLib.isKeyOn("D")) {
-					// 右へ移動
-					this.blockX = this.blockX + 1;
-				}
 
 				// P押下
 				if (GameLib.isKeyOn("P")) {

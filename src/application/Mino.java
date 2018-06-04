@@ -1,7 +1,9 @@
 package application;
 
+import java.io.File;
+
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
+import javafx.scene.image.Image;
 
 // ミノクラス
 abstract class Mino {
@@ -51,8 +53,10 @@ abstract class Mino {
 			y = this.minoY + panelArray[i].panelY();
 			w = panelArray[i].panelW();
 			h = panelArray[i].panelH();
-			canvas.setFill(Color.BLUE);
-			canvas.fillRect(x, y, w, h);
+			//canvas.setFill(Color.BLUE);
+			//canvas.fillRect(x, y, w, h);
+			Image img =	new Image(new File("panel.png").toURI().toString());
+			canvas.drawImage(img,x, y, w, h);
 		}
 	}
 
@@ -85,11 +89,11 @@ abstract class Mino {
 	}
 
 	protected void setMinoX(double x) {
-		this.minoX = this.minoX + x;
+		this.minoX = x;
 	}
 
 	protected void setMinoY(double y) {
-		this.minoY = this.minoY + y;
+		this.minoY = y;
 	}
 
 	public Mino() {
