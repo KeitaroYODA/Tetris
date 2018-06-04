@@ -1,5 +1,8 @@
 package application;
 
+//画像の表示はこれを使ってみる。。。
+import javafx.scene.image.WritableImage;
+
 // ミノを構成するパネルクラス
 class Panel {
 	private static final double panelW = 10;
