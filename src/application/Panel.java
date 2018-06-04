@@ -2,8 +2,8 @@ package application;
 
 // ミノを構成するパネルクラス
 class Panel {
-	private final double panelW = 10;
-	private final double panelH = 10;
+	private static final double panelW = 10;
+	private static final double panelH = 10;
 
 	// 左上を1,1とした表示位置
 	private int visibleX; // 表示位置（横）
@@ -39,12 +39,12 @@ class Panel {
 	}
 
 	// パネルのサイズ（幅）を返す
-	public double panelW() {
+	public static double panelW() {
 		return panelW;
 	}
 
 	// パネルのサイズ（高さ）を返す
-	public double panelH() {
+	public static double panelH() {
 		return panelH;
 	}
 }

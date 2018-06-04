@@ -25,6 +25,10 @@ abstract class Mino {
 	// ミノを構成するパネル
 	protected Panel[] panelArray = new Panel[PANEL_NUM];
 
+	public Panel getPanel(int i) {
+		return panelArray[i];
+	}
+	
 	// ミノを削除する
 	protected void clear(GraphicsContext canvas) {
 		double x = 0;
@@ -35,8 +39,8 @@ abstract class Mino {
 		for (int i = 0; i < PANEL_NUM; i++) {
 			x = this.minoX + panelArray[i].panelX();
 			y = this.minoY + panelArray[i].panelY();
-			w = panelArray[i].panelW();
-			h = panelArray[i].panelH();
+			w = Panel.panelW();
+			h = Panel.panelH();
 			canvas.clearRect(x, y, w, h);
 		}
 	}
@@ -51,8 +55,8 @@ abstract class Mino {
 		for (int i = 0; i < PANEL_NUM; i++) {
 			x = this.minoX + panelArray[i].panelX();
 			y = this.minoY + panelArray[i].panelY();
-			w = panelArray[i].panelW();
-			h = panelArray[i].panelH();
+			w = Panel.panelW();
+			h = Panel.panelH();
 			//canvas.setFill(Color.BLUE);
 			//canvas.fillRect(x, y, w, h);
 			Image img =	new Image(new File("panel.png").toURI().toString());

@@ -17,6 +17,7 @@ public class Tetris_Obj {
 	// ミノ
 	private Mino mino;
 	private Mino nextMino;
+	private OjamaMino ojamaMino;
 
 	// 画面表示
 	// テトリス画面
@@ -74,26 +75,12 @@ public class Tetris_Obj {
 		nextMino.show(canvas);
 	}
 
-	// 背景の表示
-	private void showBase() {
-	}
-
-	// 魔法エフェクト（メラ）の表示
-	private void showMera() {
+	private void createOjamaMino() {
 
 	}
-
-	// 魔法エフェクト（イオ）表示
-	private void showIo() {
-
-	}
-
-	//Block block1 = new Block1
 
 	// このメソッドが1秒間に60回ぐらい呼ばれるので
 	// テトリスの内部処理をここに書く
-	// タイマーの中でオブジェクトを生成するのは無理かも
-	// →画面をマスで区切って色を塗った方がよいかもしれない。
 	public void update() {
 
 		// 不要なフレームを間引く
@@ -104,7 +91,6 @@ public class Tetris_Obj {
 		this.execTime = now;
 
 		GraphicsContext canvas = GameLib.getGC();
-		//canvas.clearRect(0, 0, GameLib.width(), GameLib.height());
 
 		if (this.gameStatus == 0) {
 			this.gameStatus = 1;
@@ -112,17 +98,25 @@ public class Tetris_Obj {
 			Image img =	new Image(new File("background.png").toURI().toString());
 			canvas.drawImage(img,0, 0, GameLib.width(), GameLib.height());
 
+			// ミノを表示
 			mino = this.getMino();
-
+			
+			// おじゃまミノ初期化
+			int col = (int) (GameLib.width() / Panel.panelW());
+			int row = (int) (GameLib.height() / Panel.panelH());
+			ojamaMino = new OjamaMino(col, row);
+			
 			// 次のミノ画面を表示
 			this.showNextMino();
 		}
-
-
+		
 		// 以前のミノを削除してから背景を表示
 		mino.clear(canvas);
 		this.showMain();
 
+		ojamaMino.addOjamaMino(mino);
+		ojamaMino.show(canvas);
+		
 		// L押下
 		if (GameLib.isKeyOn("L")) {
 			mino.turnLeft();
