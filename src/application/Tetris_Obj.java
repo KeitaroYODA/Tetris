@@ -1,111 +1,32 @@
 package application;
-// win10からのコミットテスト
 
 import javafx.scene.canvas.GraphicsContext;
-
-
-// ブロッククラス
-abstract class Block{
-	protected int[][] block = {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};// ブロックの形状を配列で保持（横、縦）
-	protected int blockStatus = 0; // ブロックの状態（回転）
-
-	// ブロックの大きさ
-	protected static final int width = 10;
-	protected static final int height = 10;
-
-	// ブロックの座標
-	protected double x;
-	protected double y;
-
-	public Block() {
-		this.x = 0;
-		this.y = 0;
-	}
-
-	// ブロックを左回転
-	protected void turnLeft() {
-		// 継承先で定義
-	}
-	// ブロックを右回転
-	protected void turnRight() {
-		// 継承先で定義
-	}
-
-	protected void show() {
-		GraphicsContext canvas = GameLib.getGC();
-
-		for (int i = 0; i <= 4; i++) {
-			for(int l = 0; l <= 4; l++) {
-				if (this.block[i][l] == 1) {
-					// ブロックを表示する
-					double x = this.x + (i * this.width);
-					double y = this.y + (l * this.height);
-					canvas.fillRect(x, y, this.width, this.height);
-				}
-			}
-		}
-	}
-
-	public void setX(double x) {
-		this.x = x;
-	}
-
-	public void setY(double y) {
-		this.y = y;
-	}
-}
-
-// ブロック（｜）
-class Block1 extends Block {
-	public Block1() {
-		super();
-		this.block[0][1] = 1;
-		this.block[0][2] = 1;
-		this.block[0][3] = 1;
-		this.block[0][4] = 1;
-	}
-}
-
-
-//ブロック（■）
-class Block2 extends Block {
-	public Block2() {
-		super();
-		this.block[0][2] = 1;
-		this.block[0][3] = 1;
-		this.block[1][2] = 1;
-		this.block[1][3] = 1;
-	}
-}
-
-
+import javafx.scene.paint.Color;
 
 public class Tetris_Obj {
 
 	private String message = "ゲームタイトル";
+	private long execTime = System.nanoTime();
 
 	// 0:初期表示、1:ブロック初期化、2:ブロック移動中、3:ポーズ
-	private Integer gameStatus = 1;
-	private Block block;
+	private Integer gameStatus = 0;
 
-	// ブロック情報
-	private int blockWidth = 10;
-	private int blockHeight = 10;
+	// ミノ
+	private Mino mino;
+	private Mino nextMino;
 
-	// 画面のマス数
-	private final int blockRow = 100;
-	private final int blockCol = 50;
-	//private int tables[][] = new int[Tetris_Obj.blockRow][Tetris_Obj.blockCol];
+	// 画面表示
+	// テトリス画面
+	private final double mainX = 10;
+	private final double mainY = 10;
+	private final double mainW = 300;
+	private final double mainH = 400;
 
-	private double blockX = 60.0;
-	private double blockY = 50.0;
-
-
-	// 画面の初期化
-	private void showInit() {
-		GraphicsContext canvas = GameLib.getGC();
-		canvas.clearRect(0, 0, GameLib.width(), GameLib.height());
-	}
+	// 次のミノ画面
+	private final double minoX = 360;
+	private final double minoY = 10;
+	private final double minoW = 100;
+	private final double minoH = 150;
 
 	// メッセージの表示
 	private void showMessage() {
@@ -113,20 +34,45 @@ public class Tetris_Obj {
 		canvas.fillText(this.message, 60, 50 );
 	}
 
-	// 次に出てくるブロック欄の表示
-	private void showNextBlock() {
-
+	// ランダムに異なる形のミノを返す
+	private Mino getMino() {
+		double rand = Math.random() * 10;
+		Mino mino;
+		if (rand <= 2) {
+			mino = new Mino1();
+		} else if ((rand >= 3) && (rand <= 4)) {
+			mino = new Mino2();
+		} else if ((rand >= 5) && (rand <= 6)) {
+			mino = new Mino3();
+		} else if ((rand >= 7) && (rand <= 8)) {
+			mino = new Mino4();
+		} else {
+			mino = new Mino5();
+		}
+		return mino;
 	}
 
-
 	// メイン画面の表示
-	private void showBlock() {
+	private void showMain() {
+		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.BLACK);
+		canvas.fillRect(mainX, mainY, mainW, mainH);
+	}
 
+	private void showNextMino() {
+		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.BLACK);
+		canvas.fillRect(minoX, minoY, minoW, minoH);
+
+		// 背景を表示
+		nextMino = this.getMino();
+		nextMino.setMinoX(minoX + 10);
+		nextMino.setMinoY(minoY + 10);
+		nextMino.show(canvas);
 	}
 
 	// 背景の表示
 	private void showBase() {
-
 	}
 
 	// 魔法エフェクト（メラ）の表示
@@ -139,11 +85,6 @@ public class Tetris_Obj {
 
 	}
 
-
-	//ブロックオブジェクトの定義
-	private void makeBlock() {
-		this.block = new Block1();
-	}
 	//Block block1 = new Block1
 
 	// このメソッドが1秒間に60回ぐらい呼ばれるので
@@ -152,8 +93,46 @@ public class Tetris_Obj {
 	// →画面をマスで区切って色を塗った方がよいかもしれない。
 	public void update() {
 
-		// 領域の初期化
-		// 背景等固定の箇所は？
+		// 不要なフレームを間引く
+		long now = System.nanoTime();
+		if (now - execTime < 100000000) {
+			return;
+		}
+		this.execTime = now;
+
+		GraphicsContext canvas = GameLib.getGC();
+		//canvas.clearRect(0, 0, GameLib.width(), GameLib.height());
+
+		if (this.gameStatus == 0) {
+			this.gameStatus = 1;
+			canvas.clearRect(0, 0, GameLib.width(), GameLib.height());
+			mino = this.getMino();
+
+			// 次のミノ画面を表示
+			this.showNextMino();
+		}
+
+
+		// 以前のミノを削除してから背景を表示
+		mino.clear(canvas);
+		this.showMain();
+
+		// L押下
+		if (GameLib.isKeyOn("L")) {
+			mino.turnLeft();
+		}
+
+		/*
+		// ミノの接触判定
+		mino.setMinoY(1);
+		if (mino.getMinoX() > GameLib.width() - 40) {
+
+		} else {
+
+		}
+		*/
+
+		mino.show(canvas);
 
 
 		// ENTER押下
@@ -168,6 +147,10 @@ public class Tetris_Obj {
 			}
 		}*/
 
+		//GraphicsContext canvas = GameLib.getGC();
+		//canvas.fillRect(this.block.x(), this.block.y(), this.block.width(), this.block.height());
+
+		/*
 		switch(this.gameStatus) {
 			case 0:
 			// 画面の背景表示、初期化処理
@@ -176,8 +159,8 @@ public class Tetris_Obj {
 				break;
 			case 1:
 			// ブロック初期化
-				this.makeBlock();
-				this.showBlock();
+				this.createBlock();
+				//this.showBlock();
 				this.gameStatus = 2;
 				break;
 			case 2:
@@ -204,15 +187,14 @@ public class Tetris_Obj {
 
 				}
 				this.blockY = this.blockY + 0.1;
-				this.showBlock();
+				//this.showBlock();
 			break;
 		}
-
 		// デフォルト処理
 		// 　背景の表示
 		// 　キャラクタの表示
 		// 　ゲームタイトルの表示
-
+*/
 
 
 
