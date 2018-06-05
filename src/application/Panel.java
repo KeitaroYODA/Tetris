@@ -1,44 +1,30 @@
 package application;
 
-//画像の表示はこれを使ってみる。。。
+import java.io.File;
+
+import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 
 // ミノを構成するパネルクラス
 class Panel {
-	private static final double panelW = 10;
-	private static final double panelH = 10;
+	// パネル幅
+	private static final double panelW = 20;
 
-	// 左上を1,1とした表示位置
-	private int visibleX; // 表示位置（横）
-	private int visibleY; // 表示位置（縦）
+	// パネル高さ
+	private static final double panelH = 20;
 
-	private double panelX; // 左上を0としての表示座標差分（横）
-	private double panelY; // 左上を0としての表示座標差分（縦）
+	// パネル画像
+	private WritableImage resizedImage;
 
-	// パネルの相対表示位置を指定。左上が1,1
 	public Panel(int x, int y) {
-		this.visibleX = x;
-		this.visibleY = y;
-		this.panelX = this.visibleX * panelW;
-		this.panelY = this.visibleY * panelH;
+		Image img = new Image(new File("tile.png").toURI().toString());
+		resizedImage = new WritableImage(img.getPixelReader(),x, y, (int) (img.getWidth() / 16), (int) (img.getHeight() / 16));
 	}
 
-	// パメルの表示位置を更新
-	public void updateVisible(int x, int y) {
-		this.visibleX = x;
-		this.visibleY = y;
-		this.panelX = this.visibleX * panelW;
-		this.panelY = this.visibleY * panelH;
-	}
-
-	// パネルの座標（横）を返す
-	public double panelX() {
-		return panelX;
-	}
-
-	// パネルの座標（縦）を返す
-	public double panelY() {
-		return panelY;
+	// パネルの画像オブジェクトを返す
+	public Image getImage() {
+		return resizedImage;
+		//return img;
 	}
 
 	// パネルのサイズ（幅）を返す

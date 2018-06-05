@@ -1,12 +1,10 @@
 package application;
 
-import java.io.File;
-
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 
 // ミノクラス
-abstract class Mino {
+abstract class Mino implements Cloneable{
 
 	// ミノの向き
 	// 1:正面
@@ -16,8 +14,8 @@ abstract class Mino {
 	protected int direction = 1;
 
 	// ミノの左上の座標
-	public double minoX = 0.0; // 横
-	public double minoY = 0.0; // 縦
+	public double minoX; // 横
+	public double minoY; // 縦
 
 	// ミノを構成するパネル数
 	public static final int PANEL_NUM = 4;
@@ -25,10 +23,20 @@ abstract class Mino {
 	// ミノを構成するパネル
 	protected Panel[] panelArray = new Panel[PANEL_NUM];
 
+	// ミノを構成するパネルの装飾
+	protected String fileImage;
+
+	// タイル画像のトリミング始点
+	protected int tileX = 0;
+	protected int tileY = 0;
+
+	// パネルの表示位置を格納
+	protected double panelPositionArray[][] = new double[PANEL_NUM][2];
+
 	public Panel getPanel(int i) {
 		return panelArray[i];
 	}
-	
+
 	// ミノを削除する
 	protected void clear(GraphicsContext canvas) {
 		double x = 0;
@@ -37,8 +45,8 @@ abstract class Mino {
 		double h = 0;
 
 		for (int i = 0; i < PANEL_NUM; i++) {
-			x = this.minoX + panelArray[i].panelX();
-			y = this.minoY + panelArray[i].panelY();
+			x = this.minoX + (panelPositionArray[i][0] * Panel.panelW()) - Panel.panelW();
+			y = this.minoY + (panelPositionArray[i][1] * Panel.panelH()) - Panel.panelH();
 			w = Panel.panelW();
 			h = Panel.panelH();
 			canvas.clearRect(x, y, w, h);
@@ -52,14 +60,12 @@ abstract class Mino {
 		double w = 0;
 		double h = 0;
 
-		for (int i = 0; i < PANEL_NUM; i++) {
-			x = this.minoX + panelArray[i].panelX();
-			y = this.minoY + panelArray[i].panelY();
+		for (int i = 0; i < PANEL_NUM; i++ ) {
+			x = this.minoX + (panelPositionArray[i][0] * Panel.panelW()) - Panel.panelW();
+			y = this.minoY + (panelPositionArray[i][1] * Panel.panelH()) - Panel.panelH();
 			w = Panel.panelW();
 			h = Panel.panelH();
-			//canvas.setFill(Color.BLUE);
-			//canvas.fillRect(x, y, w, h);
-			Image img =	new Image(new File("panel.png").toURI().toString());
+			Image img = panelArray[i].getImage();
 			canvas.drawImage(img,x, y, w, h);
 		}
 	}
@@ -100,46 +106,133 @@ abstract class Mino {
 		this.minoY = y;
 	}
 
+	// ミノを構成するパネルオブジェクトを作成して配列に格納
+	protected void makePanel() {
+		for (int i = 0; i < PANEL_NUM; i++) {
+			panelArray[i] = new Panel(this.tileX, this.tileY);
+		}
+	}
+
+	// ゲームオーバーの判定
+	// ミノを構成するパネルの１つが天井に接触したらゲームオーバー
+	protected boolean gameOver() {
+		double y = 0;
+		for (int i = 0; i < PANEL_NUM; i++ ) {
+			// パネルの左上の座標を取得
+			y = this.minoY + (panelPositionArray[i][1] * Panel.panelH()) - Panel.panelH();
+
+			// ミノが天井に接触した
+			if (y <= 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// おじゃまミノと床との衝突判定
+	protected boolean colision(OjamaMino ojama) {
+		int col = 0;
+		int row = 0;
+
+		double x = 0;
+		double y = 0;
+
+		// おじゃまミノのパネル情報を取得
+		Panel[][] panelArray = ojama.getPanelArray();
+
+		for (int i = 0; i < PANEL_NUM; i++ ) {
+			// パネルの左上の座標を取得
+			x = this.minoX + (panelPositionArray[i][0] * Panel.panelW()) - Panel.panelW();
+			y = this.minoY + (panelPositionArray[i][1] * Panel.panelH()) - Panel.panelH();
+
+			// 床に衝突した
+			if ((y + Panel.panelH()) >= GameLib.height()) {
+				return true;
+			}
+
+			// パネルに衝突した
+			// 衝突後に判定しているので１パネル分埋まる。。。
+			col = (int) (x / Panel.panelW());
+			row = (int) (y / Panel.panelH());
+			if (panelArray[col][row] != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// コンストラクタ
 	public Mino() {
-		// 継承先で実装
+		this.minoX = Panel.panelW() * 10;
+		this.minoY = 0.0;
 	}
 }
 
 //ミノ（｜）
 class Mino1 extends Mino {
+
 	public Mino1() {
-		panelArray[0] = new Panel(1, 1);
-		panelArray[1] = new Panel(1, 2);
-		panelArray[2] = new Panel(1, 3);
-		panelArray[3] = new Panel(1, 4);
+		super();
+
+		// ミノを構成するパネルの画像を指定
+		this.fileImage = "panel.png";
+		this.tileX = 64;
+		this.makePanel();
+
+		// ミノを構成するパネルの位置を指定
+		// 0:パネルの横位置、1:パネルの縦位置
+		panelPositionArray[0][0] = 1;
+		panelPositionArray[0][1] = 1;
+		panelPositionArray[1][0] = 1;
+		panelPositionArray[1][1] = 2;
+		panelPositionArray[2][0] = 1;
+		panelPositionArray[2][1] = 3;
+		panelPositionArray[3][0] = 1;
+		panelPositionArray[3][1] = 4;
 	}
 
 	// ミノを回転
 	public void turn() {
 		switch(this.direction) {
 		case 1: // 正面
-			panelArray[0].updateVisible(1, 1);
-			panelArray[1].updateVisible(1, 2);
-			panelArray[2].updateVisible(1, 3);
-			panelArray[3].updateVisible(1, 4);
+			panelPositionArray[0][0] = 1;
+			panelPositionArray[0][1] = 1;
+			panelPositionArray[1][0] = 1;
+			panelPositionArray[1][1] = 2;
+			panelPositionArray[2][0] = 1;
+			panelPositionArray[2][1] = 3;
+			panelPositionArray[3][0] = 1;
+			panelPositionArray[3][1] = 4;
 			break;
 		case 2: // 右向き
-			panelArray[0].updateVisible(1, 1);
-			panelArray[1].updateVisible(2, 1);
-			panelArray[2].updateVisible(3, 1);
-			panelArray[3].updateVisible(4, 1);
+			panelPositionArray[0][0] = 1;
+			panelPositionArray[0][1] = 1;
+			panelPositionArray[1][0] = 2;
+			panelPositionArray[1][1] = 1;
+			panelPositionArray[2][0] = 3;
+			panelPositionArray[2][1] = 1;
+			panelPositionArray[3][0] = 4;
+			panelPositionArray[3][1] = 1;
 			break;
 		case 3: // 上下逆
-			panelArray[0].updateVisible(4, 1);
-			panelArray[1].updateVisible(4, 2);
-			panelArray[2].updateVisible(4, 3);
-			panelArray[3].updateVisible(4, 4);
+			panelPositionArray[0][0] = 4;
+			panelPositionArray[0][1] = 1;
+			panelPositionArray[1][0] = 4;
+			panelPositionArray[1][1] = 2;
+			panelPositionArray[2][0] = 4;
+			panelPositionArray[2][1] = 3;
+			panelPositionArray[3][0] = 4;
+			panelPositionArray[3][1] = 4;
 			break;
 		case 4: // 左向き
-			panelArray[0].updateVisible(1, 4);
-			panelArray[1].updateVisible(2, 4);
-			panelArray[2].updateVisible(3, 4);
-			panelArray[3].updateVisible(4, 4);
+			panelPositionArray[0][0] = 1;
+			panelPositionArray[0][1] = 4;
+			panelPositionArray[1][0] = 2;
+			panelPositionArray[1][1] = 4;
+			panelPositionArray[2][0] = 3;
+			panelPositionArray[2][1] = 4;
+			panelPositionArray[3][0] = 4;
+			panelPositionArray[3][1] = 4;
 			break;
 		}
 	}
@@ -148,38 +241,66 @@ class Mino1 extends Mino {
 // ミノ（凸）
 class Mino2 extends Mino {
 	public Mino2() {
-		panelArray[0] = new Panel(1, 4);
-		panelArray[1] = new Panel(2, 3);
-		panelArray[2] = new Panel(2, 4);
-		panelArray[3] = new Panel(3, 4);
+		super();
+		// ミノを構成するパネルの画像を指定
+		this.fileImage = "panel.png";
+		this.tileX = 192;
+		this.makePanel();
+
+		// ミノを構成するパネルの位置を指定
+		// 0:パネルの横位置、1:パネルの縦位置
+		panelPositionArray[0][0] = 1;
+		panelPositionArray[0][1] = 4;
+		panelPositionArray[1][0] = 2;
+		panelPositionArray[1][1] = 3;
+		panelPositionArray[2][0] = 2;
+		panelPositionArray[2][1] = 4;
+		panelPositionArray[3][0] = 3;
+		panelPositionArray[3][1] = 4;
 	}
 
 	// ミノを回転
 	public void turn() {
 		switch(this.direction) {
 		case 1: // 正面
-			panelArray[0].updateVisible(1, 4);
-			panelArray[1].updateVisible(2, 3);
-			panelArray[2].updateVisible(2, 4);
-			panelArray[3].updateVisible(3, 4);
+			panelPositionArray[0][0] = 1;
+			panelPositionArray[0][1] = 4;
+			panelPositionArray[1][0] = 2;
+			panelPositionArray[1][1] = 3;
+			panelPositionArray[2][0] = 2;
+			panelPositionArray[2][1] = 4;
+			panelPositionArray[3][0] = 3;
+			panelPositionArray[3][1] = 4;
 			break;
 		case 2: // 右向き
-			panelArray[0].updateVisible(1, 1);
-			panelArray[1].updateVisible(1, 2);
-			panelArray[2].updateVisible(1, 3);
-			panelArray[3].updateVisible(2, 2);
+			panelPositionArray[0][0] = 1;
+			panelPositionArray[0][1] = 1;
+			panelPositionArray[1][0] = 1;
+			panelPositionArray[1][1] = 2;
+			panelPositionArray[2][0] = 1;
+			panelPositionArray[2][1] = 3;
+			panelPositionArray[3][0] = 2;
+			panelPositionArray[3][1] = 2;
 			break;
 		case 3: // 上下逆
-			panelArray[0].updateVisible(2, 1);
-			panelArray[1].updateVisible(3, 1);
-			panelArray[2].updateVisible(4, 1);
-			panelArray[3].updateVisible(3, 2);
+			panelPositionArray[0][0] = 2;
+			panelPositionArray[0][1] = 1;
+			panelPositionArray[1][0] = 3;
+			panelPositionArray[1][1] = 1;
+			panelPositionArray[2][0] = 4;
+			panelPositionArray[2][1] = 1;
+			panelPositionArray[3][0] = 3;
+			panelPositionArray[3][1] = 2;
 			break;
 		case 4: // 左向き
-			panelArray[0].updateVisible(4, 2);
-			panelArray[1].updateVisible(3, 3);
-			panelArray[2].updateVisible(4, 3);
-			panelArray[3].updateVisible(4, 4);
+			panelPositionArray[0][0] = 4;
+			panelPositionArray[0][1] = 2;
+			panelPositionArray[1][0] = 3;
+			panelPositionArray[1][1] = 3;
+			panelPositionArray[2][0] = 4;
+			panelPositionArray[2][1] = 3;
+			panelPositionArray[3][0] = 4;
+			panelPositionArray[3][1] = 4;
 			break;
 		}
 	}
@@ -188,10 +309,22 @@ class Mino2 extends Mino {
 //ミノ（■）
 class Mino3 extends Mino {
 	public Mino3() {
-		panelArray[0] = new Panel(1, 3);
-		panelArray[1] = new Panel(1, 4);
-		panelArray[2] = new Panel(2, 3);
-		panelArray[3] = new Panel(2, 4);
+		super();
+		// ミノを構成するパネルの画像を指定
+		this.fileImage = "panel.png";
+		this.tileX = 320;
+		this.makePanel();
+
+		// ミノを構成するパネルの位置を指定
+		// 0:パネルの横位置、1:パネルの縦位置
+		panelPositionArray[0][0] = 1;
+		panelPositionArray[0][1] = 3;
+		panelPositionArray[1][0] = 1;
+		panelPositionArray[1][1] = 4;
+		panelPositionArray[2][0] = 2;
+		panelPositionArray[2][1] = 3;
+		panelPositionArray[3][0] = 2;
+		panelPositionArray[3][1] = 4;
 	}
 
 	public void turn() {
@@ -202,38 +335,66 @@ class Mino3 extends Mino {
 //ミノ（カギ１）
 class Mino4 extends Mino {
 	public Mino4() {
-		panelArray[0] = new Panel(1, 2);
-		panelArray[1] = new Panel(1, 3);
-		panelArray[2] = new Panel(2, 3);
-		panelArray[3] = new Panel(2, 4);
+		super();
+		// ミノを構成するパネルの画像を指定
+		this.fileImage = "background.png";
+		this.tileX = 384;
+		this.makePanel();
+
+		// ミノを構成するパネルの位置を指定
+		// 0:パネルの横位置、1:パネルの縦位置
+		panelPositionArray[0][0] = 1;
+		panelPositionArray[0][1] = 2;
+		panelPositionArray[1][0] = 1;
+		panelPositionArray[1][1] = 3;
+		panelPositionArray[2][0] = 2;
+		panelPositionArray[2][1] = 3;
+		panelPositionArray[3][0] = 2;
+		panelPositionArray[3][1] = 4;
 	}
 
 	// ミノを回転
 	public void turn() {
 		switch(this.direction) {
 		case 1: // 正面
-			panelArray[0].updateVisible(1, 2);
-			panelArray[1].updateVisible(1, 3);
-			panelArray[2].updateVisible(2, 3);
-			panelArray[3].updateVisible(2, 4);
+			panelPositionArray[0][0] = 1;
+			panelPositionArray[0][1] = 2;
+			panelPositionArray[1][0] = 1;
+			panelPositionArray[1][1] = 3;
+			panelPositionArray[2][0] = 2;
+			panelPositionArray[2][1] = 3;
+			panelPositionArray[3][0] = 2;
+			panelPositionArray[3][1] = 4;
 			break;
 		case 2: // 右向き
-			panelArray[0].updateVisible(3, 1);
-			panelArray[1].updateVisible(4, 1);
-			panelArray[2].updateVisible(2, 2);
-			panelArray[3].updateVisible(3, 2);
+			panelPositionArray[0][0] = 3;
+			panelPositionArray[0][1] = 1;
+			panelPositionArray[1][0] = 4;
+			panelPositionArray[1][1] = 1;
+			panelPositionArray[2][0] = 2;
+			panelPositionArray[2][1] = 2;
+			panelPositionArray[3][0] = 3;
+			panelPositionArray[3][1] = 2;
 			break;
 		case 3: // 上下逆
-			panelArray[0].updateVisible(3, 2);
-			panelArray[1].updateVisible(3, 3);
-			panelArray[2].updateVisible(4, 3);
-			panelArray[3].updateVisible(4, 4);
+			panelPositionArray[0][0] = 3;
+			panelPositionArray[0][1] = 2;
+			panelPositionArray[1][0] = 3;
+			panelPositionArray[1][1] = 3;
+			panelPositionArray[2][0] = 4;
+			panelPositionArray[2][1] = 3;
+			panelPositionArray[3][0] = 4;
+			panelPositionArray[3][1] = 4;
 			break;
 		case 4: // 左向き
-			panelArray[0].updateVisible(1, 4);
-			panelArray[1].updateVisible(2, 3);
-			panelArray[2].updateVisible(2, 4);
-			panelArray[3].updateVisible(3, 3);
+			panelPositionArray[0][0] = 1;
+			panelPositionArray[0][1] = 4;
+			panelPositionArray[1][0] = 2;
+			panelPositionArray[1][1] = 3;
+			panelPositionArray[2][0] = 2;
+			panelPositionArray[2][1] = 4;
+			panelPositionArray[3][0] = 3;
+			panelPositionArray[3][1] = 3;
 			break;
 		}
 	}
@@ -242,38 +403,66 @@ class Mino4 extends Mino {
 //ミノ（カギ２）
 class Mino5 extends Mino {
 	public Mino5() {
-		panelArray[0] = new Panel(1, 3);
-		panelArray[1] = new Panel(1, 4);
-		panelArray[2] = new Panel(2, 2);
-		panelArray[3] = new Panel(2, 3);
+		super();
+		// ミノを構成するパネルの画像を指定
+		this.tileX = 448;
+		this.fileImage = "background.png";
+		this.makePanel();
+
+		// ミノを構成するパネルの位置を指定
+		// 0:パネルの横位置、1:パネルの縦位置
+		panelPositionArray[0][0] = 1;
+		panelPositionArray[0][1] = 3;
+		panelPositionArray[1][0] = 1;
+		panelPositionArray[1][1] = 4;
+		panelPositionArray[2][0] = 2;
+		panelPositionArray[2][1] = 2;
+		panelPositionArray[3][0] = 2;
+		panelPositionArray[3][1] = 3;
 	}
 
 	// ミノを回転
 	public void turn() {
 		switch(this.direction) {
 		case 1: // 正面
-			panelArray[0].updateVisible(1, 3);
-			panelArray[1].updateVisible(1, 4);
-			panelArray[2].updateVisible(2, 2);
-			panelArray[3].updateVisible(2, 3);
+			panelPositionArray[0][0] = 1;
+			panelPositionArray[0][1] = 3;
+			panelPositionArray[1][0] = 1;
+			panelPositionArray[1][1] = 4;
+			panelPositionArray[2][0] = 2;
+			panelPositionArray[2][1] = 2;
+			panelPositionArray[3][0] = 2;
+			panelPositionArray[3][1] = 3;
 			break;
 		case 2: // 右向き
-			panelArray[0].updateVisible(2, 1);
-			panelArray[1].updateVisible(3, 1);
-			panelArray[2].updateVisible(3, 2);
-			panelArray[3].updateVisible(4, 2);
+			panelPositionArray[0][0] = 2;
+			panelPositionArray[0][1] = 1;
+			panelPositionArray[1][0] = 3;
+			panelPositionArray[1][1] = 1;
+			panelPositionArray[2][0] = 3;
+			panelPositionArray[2][1] = 2;
+			panelPositionArray[3][0] = 4;
+			panelPositionArray[3][1] = 2;
 			break;
 		case 3: // 上下逆
-			panelArray[0].updateVisible(4, 2);
-			panelArray[1].updateVisible(3, 3);
-			panelArray[2].updateVisible(4, 3);
-			panelArray[3].updateVisible(3, 4);
+			panelPositionArray[0][0] = 4;
+			panelPositionArray[0][1] = 2;
+			panelPositionArray[1][0] = 3;
+			panelPositionArray[1][1] = 3;
+			panelPositionArray[2][0] = 4;
+			panelPositionArray[2][1] = 3;
+			panelPositionArray[3][0] = 3;
+			panelPositionArray[3][1] = 4;
 			break;
 		case 4: // 左向き
-			panelArray[0].updateVisible(1, 3);
-			panelArray[1].updateVisible(2, 3);
-			panelArray[2].updateVisible(2, 4);
-			panelArray[3].updateVisible(3, 4);
+			panelPositionArray[0][0] = 1;
+			panelPositionArray[0][1] = 3;
+			panelPositionArray[1][0] = 2;
+			panelPositionArray[1][1] = 3;
+			panelPositionArray[2][0] = 2;
+			panelPositionArray[2][1] = 4;
+			panelPositionArray[3][0] = 3;
+			panelPositionArray[3][1] = 4;
 			break;
 		}
 	}
