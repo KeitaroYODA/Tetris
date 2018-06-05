@@ -29,7 +29,7 @@ abstract class Mino implements Cloneable{
 	// タイル画像のトリミング始点
 	protected int tileX = 0;
 	protected int tileY = 0;
-
+	
 	// パネルの表示位置を格納
 	protected double panelPositionArray[][] = new double[PANEL_NUM][2];
 
@@ -74,6 +74,81 @@ abstract class Mino implements Cloneable{
 		// 継承先で実装
 	}
 
+	// 右に移動
+	protected void moveRight(OjamaMino ojama) {
+		
+		double moveX = this.minoX + Panel.panelW();	
+		Panel[][] panelArray = ojama.getPanelArray();
+		
+		// ミノを構成するパネル全てで衝突判定をおこなう
+		for (int i = 0; i < PANEL_NUM; i++ ) {
+
+			// パネルの左上の座標を取得
+			double x, y = 0;
+			x = moveX + (panelPositionArray[i][0] * Panel.panelW()) - Panel.panelW();
+			y = this.minoY + (panelPositionArray[i][1] * Panel.panelH()) - Panel.panelH();
+
+			// 座標に相当する配列インデックスを取得
+			int col, row = 0;
+			col = (int) (x / Panel.panelW());
+			row = (int) (y / Panel.panelH());
+
+			// 衝突したら移動しない
+			// 右側に衝突
+			if (col >= OjamaMino.COL()) {
+				return;
+			}
+			
+			// 左側に衝突
+			if (col < 0) {
+				return;
+			}
+		
+			// パネルに衝突
+			if (panelArray[col][row] != null) {
+				return;
+			}
+		}
+		this.minoX = moveX;
+	}
+	
+	// 左に移動
+	protected void moveLeft(OjamaMino ojama) {		
+		double moveX = this.minoX - Panel.panelW();
+		Panel[][] panelArray = ojama.getPanelArray();
+		
+		// ミノを構成するパネル全てで衝突判定をおこなう
+		for (int i = 0; i < PANEL_NUM; i++ ) {
+
+			// パネルの左上の座標を取得
+			double x, y = 0;
+			x = moveX + (panelPositionArray[i][0] * Panel.panelW()) - Panel.panelW();
+			y = this.minoY + (panelPositionArray[i][1] * Panel.panelH()) - Panel.panelH();
+
+			// 座標に相当する配列インデックスを取得
+			int col, row = 0;
+			col = (int) (x / Panel.panelW());
+			row = (int) (y / Panel.panelH());
+
+			// 衝突したら移動しない
+			// 右側に衝突
+			if (col >= OjamaMino.COL()) {
+				return;
+			}
+			
+			// 左側に衝突
+			if (col < 0) {
+				return;
+			}
+		
+			// パネルに衝突
+			if (panelArray[col][row] != null) {
+				return;
+			}
+		}
+		this.minoX = moveX;
+	}
+	
 	protected void turnRight() {
 		this.direction++;
 		if (this.direction > 4) {
@@ -83,11 +158,21 @@ abstract class Mino implements Cloneable{
 	}
 
 	protected void turnLeft() {
+		// 衝突後戻す用
+		//int currentDirection = this.direction;
+		
 		this.direction--;
 		if (this.direction < 1) {
 			this.direction = 4;
 		}
+		
+		// ミノを回転
 		this.turn();
+		
+		// ここで衝突判定
+		
+		// 衝突していたら元に戻す
+		//this.direction = currentDirection;
 	}
 
 	protected double getMinoX() {
@@ -146,7 +231,7 @@ abstract class Mino implements Cloneable{
 			y = this.minoY + (panelPositionArray[i][1] * Panel.panelH()) - Panel.panelH();
 
 			// 床に衝突した
-			if ((y + Panel.panelH()) >= Tetris_Obj.mainH()) {
+			if ((y + Panel.panelH()) >= (OjamaMino.ROW() * Panel.panelH())) {
 				return true;
 			}
 

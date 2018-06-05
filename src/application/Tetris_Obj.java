@@ -12,23 +12,26 @@ public class Tetris_Obj {
 	private String message = "ゲームタイトル";
 	private long execTime = System.nanoTime();
 
-	private final AudioClip mediaTurn = new AudioClip(new File("turn.mp3").toURI().toString());
-	private final AudioClip mediaColision = new AudioClip(new File("colision.mp3").toURI().toString());
+	// サウンド
+	private final AudioClip mediaTurn = new AudioClip(new File("turn.mp3").toURI().toString()); // ブロック回転
+	private final AudioClip mediaColision = new AudioClip(new File("colision.mp3").toURI().toString()); // ブロック衝突
 
 	// 0:初期表示、1:ブロック初期化、2:ブロック移動中、3:ポーズ
 	private Integer gameStatus = 0;
 
 	// ミノ
-	private Mino mino;
-	private Mino nextMino;
-	private OjamaMino ojamaMino;
+	private Mino mino; // 落下中のミノ
+	private Mino nextMino; // 次に表示されるミノ
+	private OjamaMino ojamaMino; // 落下済みのミノ
 
 	// 画面表示
 	// テトリス画面
+	/*
 	private static final double mainX = 0;
 	private static final double mainY = 0;
 	private static final double mainW = Panel.panelW() * 16;
 	private static final double mainH = Panel.panelH() * 18;
+	*/
 	// 得点画面
 	private static final double countX = Panel.panelW() * 17;
 	private static final double countY = Panel.panelW() * 1;
@@ -39,16 +42,6 @@ public class Tetris_Obj {
 	private final double minoY = Panel.panelW() * 5;
 	private final double minoW = Panel.panelW() * 5;
 	private final double minoH = Panel.panelH() * 6;
-
-	// テトリス画面の幅を返す
-	public static double mainW() {
-		return mainW;
-	}
-
-	// テトリス画面の高さを返す
-	public static double mainH() {
-		return mainH;
-	}
 
 	// メッセージの表示
 	private void showMessage() {
@@ -105,13 +98,6 @@ public class Tetris_Obj {
 		canvas.fillText("ここに得点が表示される", countX + Panel.panelW(), countY + Panel.panelW());
 	}
 
-	// テトリス画面の表示
-	private void showMain() {
-		GraphicsContext canvas = GameLib.getGC();
-		canvas.setFill(Color.BLACK);
-		canvas.fillRect(mainX, mainY, mainW, mainH);
-	}
-
 	// 次のミノ表示
 	private void showNextMino() {
 		GraphicsContext canvas = GameLib.getGC();
@@ -138,17 +124,15 @@ public class Tetris_Obj {
 		GraphicsContext canvas = GameLib.getGC();
 
 		if (this.gameStatus == 0) {
+			// 初回表示時またはゲームオーバ後の再開時に実行される
 			this.gameStatus = 1;
 			canvas.clearRect(0, 0, GameLib.width(), GameLib.height());
 			this.showBackground();
 
-			// ミノを表示
+			// ミノ作成
 			mino = this.getMino();
-
-			// おじゃまミノ初期化
-			int col = (int) (mainW / Panel.panelW());
-			int row = (int) (mainH / Panel.panelH());
-			ojamaMino = new OjamaMino(col, row);
+			// 背景作成
+			ojamaMino = new OjamaMino();
 
 			// 次のミノ画面を表示
 			this.showNextMino();
@@ -191,7 +175,6 @@ public class Tetris_Obj {
 
 		// 以前のミノを削除してから背景を表示
 		mino.clear(canvas);
-		this.showMain();
 
 		// L押下
 		if (GameLib.isKeyOn("L")) {
@@ -234,22 +217,11 @@ public class Tetris_Obj {
 		double x = mino.getMinoX();
 		// A押下
 		if (GameLib.isKeyOn("A")) {
-			// 左へ移動
-			x = x - Panel.panelW();
-			if (x <= 0) {
-				x = 0;
-			}
-			mino.setMinoX(x);
+			mino.moveLeft(ojamaMino);
 		}
-
 		// D押下
 		if (GameLib.isKeyOn("D")) {
-			// 右へ移動
-			x = x + Panel.panelW();
-			if (x >= GameLib.width()) {
-				x = GameLib.width();
-			}
-			mino.setMinoX(x);
+			mino.moveRight(ojamaMino);
 		}
 
 		mino.show(canvas);
