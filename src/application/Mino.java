@@ -146,12 +146,14 @@ abstract class Mino implements Cloneable{
 			y = this.minoY + (panelPositionArray[i][1] * Panel.panelH()) - Panel.panelH();
 
 			// 床に衝突した
-			if ((y + Panel.panelH()) >= GameLib.height()) {
+			if ((y + Panel.panelH()) >= Tetris_Obj.mainH()) {
 				return true;
 			}
 
 			// パネルに衝突した
 			// 衝突後に判定しているので１パネル分埋まる。。。
+			// 横から衝突する場合はfalseを返さなければいけない。
+			// →配列に含むまれることを条件にしない。座標で判定する？
 			col = (int) (x / Panel.panelW());
 			row = (int) (y / Panel.panelH());
 			if (panelArray[col][row] != null) {
@@ -163,7 +165,7 @@ abstract class Mino implements Cloneable{
 
 	// コンストラクタ
 	public Mino() {
-		this.minoX = Panel.panelW() * 10;
+		this.minoX = Panel.panelW() * 8;
 		this.minoY = 0.0;
 	}
 }

@@ -5,12 +5,15 @@ import java.io.File;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
+import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
-
 public class Tetris_Obj {
 
 	private String message = "ゲームタイトル";
 	private long execTime = System.nanoTime();
+
+	private final AudioClip mediaTurn = new AudioClip(new File("turn.mp3").toURI().toString());
+	private final AudioClip mediaColision = new AudioClip(new File("colision.mp3").toURI().toString());
 
 	// 0:初期表示、1:ブロック初期化、2:ブロック移動中、3:ポーズ
 	private Integer gameStatus = 0;
@@ -22,16 +25,30 @@ public class Tetris_Obj {
 
 	// 画面表示
 	// テトリス画面
-	private final double mainX = 0;
-	private final double mainY = 0;
-	private final double mainW = 300;
-	private final double mainH = 400;
-
+	private static final double mainX = 0;
+	private static final double mainY = 0;
+	private static final double mainW = Panel.panelW() * 16;
+	private static final double mainH = Panel.panelH() * 18;
+	// 得点画面
+	private static final double countX = Panel.panelW() * 17;
+	private static final double countY = Panel.panelW() * 1;
+	private static final double countW = Panel.panelW() * 12;
+	private static final double countH = Panel.panelH() * 3;
 	// 次のミノ画面
-	private final double minoX = 360;
-	private final double minoY = 10;
-	private final double minoW = 100;
-	private final double minoH = 150;
+	private final double minoX = Panel.panelW() * 17;
+	private final double minoY = Panel.panelW() * 5;
+	private final double minoW = Panel.panelW() * 5;
+	private final double minoH = Panel.panelH() * 6;
+
+	// テトリス画面の幅を返す
+	public static double mainW() {
+		return mainW;
+	}
+
+	// テトリス画面の高さを返す
+	public static double mainH() {
+		return mainH;
+	}
 
 	// メッセージの表示
 	private void showMessage() {
@@ -79,6 +96,15 @@ public class Tetris_Obj {
 		}
 	}
 
+	// 得点表示
+	private void showCount() {
+		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.BLACK);
+		canvas.fillRect(countX, countY, countW, countH);
+		canvas.setFill(Color.WHITE);
+		canvas.fillText("ここに得点が表示される", countX + Panel.panelW(), countY + Panel.panelW());
+	}
+
 	// テトリス画面の表示
 	private void showMain() {
 		GraphicsContext canvas = GameLib.getGC();
@@ -120,15 +146,18 @@ public class Tetris_Obj {
 			mino = this.getMino();
 
 			// おじゃまミノ初期化
-			int col = (int) (GameLib.width() / Panel.panelW());
-			int row = (int) (GameLib.height() / Panel.panelH());
+			int col = (int) (mainW / Panel.panelW());
+			int row = (int) (mainH / Panel.panelH());
 			ojamaMino = new OjamaMino(col, row);
 
 			// 次のミノ画面を表示
 			this.showNextMino();
+			this.showCount();
 		}
+		// 次にミノをミノにセットして最上段に表示
 		else if (this.gameStatus == 3) {
-			// 次にミノをミノにセットして最上段に表示
+			// おじゃまミノの行が揃っていれば１行削除
+
 
 			// 参照を渡しているのでだめ
 			//this.mino = (Mino)nextMino.clone();
@@ -147,6 +176,17 @@ public class Tetris_Obj {
 				this.gameStatus = 0;
 			}
 			return;
+
+		} else if (this.gameStatus == 5) {
+
+			// E押下
+			if (GameLib.isKeyOn("E")) {
+				this.gameStatus = 1;
+			}
+
+			canvas.setFill(Color.WHITE);
+			canvas.fillText("PAUSE。。。PRESS E ", 60, 50 );
+			return;
 		}
 
 		// 以前のミノを削除してから背景を表示
@@ -155,14 +195,17 @@ public class Tetris_Obj {
 
 		// L押下
 		if (GameLib.isKeyOn("L")) {
+			mediaTurn.play();
 			mino.turnLeft();
 		}
 
 		// ミノ落下
 		double y = mino.getMinoY() + (Panel.panelH() / 2);
+		mino.setMinoY(y);
 
 		// ミノの衝突判定
 		if (mino.colision(ojamaMino)) {
+
 			// ゲームオーバの判定
 			if (mino.gameOver()) {
 				// ゲームオーバー
@@ -170,14 +213,22 @@ public class Tetris_Obj {
 				return;
 			}
 
+			// おじゃまミノが揃っているかチェック
+			if (ojamaMino.checkOjamaMinoRow()) {
+				canvas.setFill(Color.WHITE);
+				canvas.fillText("列がそろいました。。。", 60, 50 );
+			}
+
 			// 接地したらおじゃまミノ化する
 			ojamaMino.addOjamaMino(mino);
+			ojamaMino.show(canvas);
+			// 衝突音を鳴らす
+			mediaColision.play();
 			this.gameStatus = 3;
 			return;
 		}
 
 		ojamaMino.show(canvas);
-		mino.setMinoY(y);
 
 		// ミノ操作
 		double x = mino.getMinoX();
@@ -203,7 +254,10 @@ public class Tetris_Obj {
 
 		mino.show(canvas);
 
-
+		// P押下
+		if (GameLib.isKeyOn("P")) {
+			this.gameStatus = 5;
+		}
 
 
 		//GraphicsContext canvas = GameLib.getGC();

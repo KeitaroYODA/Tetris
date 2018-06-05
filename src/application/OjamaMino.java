@@ -48,6 +48,27 @@ class OjamaMino {
 		}
 	}
 
+	// おじゃまミノの行が揃っているかチェック
+	public boolean checkOjamaMinoRow() {
+		boolean check = false;
+
+		for (int i = 0; i < this.row; i++) {
+			check = true;
+			for (int l = 0; l < this.col; l++) {
+				if (this.panelArray[l][i] == null) {
+					check = false;
+				}
+			}
+
+			// １行でも揃っていれば真を返す
+			if (check) {
+				return check;
+			}
+		}
+
+		return check;
+	}
+
 	// おじゃまパネルを表示
 	public void show(GraphicsContext canvas) {
 
