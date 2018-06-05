@@ -94,10 +94,10 @@ abstract class Mino implements Cloneable{
 	}
 
 	// 右に移動
-	protected void moveRight(OjamaMino ojama) {
+	protected void moveRight(Field field) {
 		
 		double moveX = this.minoX + Panel.panelW();	
-		Panel[][] panelArray = ojama.getPanelArray();
+		Panel[][] panelArray = field.getPanelArray();
 		
 		// ミノを構成するパネル全てで衝突判定をおこなう
 		for (int i = 0; i < PANEL_NUM; i++ ) {
@@ -114,7 +114,7 @@ abstract class Mino implements Cloneable{
 
 			// 衝突したら移動しない
 			// 右側に衝突
-			if (col >= OjamaMino.COL()) {
+			if (col >= Field.COL()) {
 				return;
 			}
 			
@@ -132,9 +132,9 @@ abstract class Mino implements Cloneable{
 	}
 	
 	// 左に移動
-	protected void moveLeft(OjamaMino ojama) {		
+	protected void moveLeft(Field field) {		
 		double moveX = this.minoX - Panel.panelW();
-		Panel[][] panelArray = ojama.getPanelArray();
+		Panel[][] panelArray = field.getPanelArray();
 		
 		// ミノを構成するパネル全てで衝突判定をおこなう
 		for (int i = 0; i < PANEL_NUM; i++ ) {
@@ -151,7 +151,7 @@ abstract class Mino implements Cloneable{
 
 			// 衝突したら移動しない
 			// 右側に衝突
-			if (col >= OjamaMino.COL()) {
+			if (col >= Field.COL()) {
 				return;
 			}
 			
@@ -234,7 +234,7 @@ abstract class Mino implements Cloneable{
 	}
 
 	// おじゃまミノと床との衝突判定
-	protected boolean colision(OjamaMino ojama) {
+	protected boolean colision(Field field) {
 		int col = 0;
 		int row = 0;
 
@@ -242,7 +242,7 @@ abstract class Mino implements Cloneable{
 		double y = 0;
 
 		// おじゃまミノのパネル情報を取得
-		Panel[][] panelArray = ojama.getPanelArray();
+		Panel[][] panelArray = field.getPanelArray();
 
 		for (int i = 0; i < PANEL_NUM; i++ ) {
 			// パネルの左上の座標を取得
@@ -250,7 +250,7 @@ abstract class Mino implements Cloneable{
 			y = this.minoY + (panelPositionArray[i][1] * Panel.panelH()) - Panel.panelH();
 
 			// 床に衝突した
-			if ((y + Panel.panelH()) >= (OjamaMino.ROW() * Panel.panelH())) {
+			if ((y + Panel.panelH()) >= (Field.ROW() * Panel.panelH())) {
 				return true;
 			}
 

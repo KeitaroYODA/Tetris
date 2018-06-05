@@ -22,7 +22,7 @@ public class Tetris_Obj {
 	// ミノ
 	private Mino mino; // 落下中のミノ
 	private Mino nextMino; // 次に表示されるミノ
-	private OjamaMino ojamaMino; // 落下済みのミノ
+	private Field field; // パネル表示領域
 
 	// 画面表示
 	// テトリス画面
@@ -48,25 +48,6 @@ public class Tetris_Obj {
 		GraphicsContext canvas = GameLib.getGC();
 		canvas.fillText(this.message, 60, 50 );
 	}
-
-	/*
-	// ランダムに異なる形のミノを返す
-	private Mino getMino() {
-		double rand = Math.random() * 10;
-		Mino mino;
-		if (rand <= 2) {
-			mino = new Mino1();
-		} else if ((rand >= 3) && (rand <= 4)) {
-			mino = new Mino2();
-		} else if ((rand >= 5) && (rand <= 6)) {
-			mino = new Mino3();
-		} else if ((rand >= 7) && (rand <= 8)) {
-			mino = new Mino4();
-		} else {
-			mino = new Mino5();
-		}
-		return mino;
-	}*/
 
 	// 背景の表示
 	private void showBackground() {
@@ -132,8 +113,9 @@ public class Tetris_Obj {
 
 			// ミノ作成
 			mino = Mino.getMino();
+			
 			// 背景作成
-			ojamaMino = new OjamaMino();
+			field = new Field();
 
 			// 次のミノ画面を表示
 			this.showNextMino();
@@ -188,7 +170,7 @@ public class Tetris_Obj {
 		mino.setMinoY(y);
 
 		// ミノの衝突判定
-		if (mino.colision(ojamaMino)) {
+		if (mino.colision(field)) {
 
 			// ゲームオーバの判定
 			if (mino.gameOver()) {
@@ -198,31 +180,33 @@ public class Tetris_Obj {
 			}
 
 			// おじゃまミノが揃っているかチェック
-			if (ojamaMino.checkOjamaMinoRow()) {
+			if (field.checkOjamaMinoRow()) {
 				canvas.setFill(Color.WHITE);
 				canvas.fillText("列がそろいました。。。", 60, 50 );
 			}
 
 			// 接地したらおじゃまミノ化する
-			ojamaMino.addOjamaMino(mino);
-			ojamaMino.show(canvas);
+			field.addMinoPanel(mino);
+			field.show(canvas);
+			
 			// 衝突音を鳴らす
 			mediaColision.play();
+			
 			this.gameStatus = 3;
 			return;
 		}
 
-		ojamaMino.show(canvas);
+		field.show(canvas);
 
 		// ミノ操作
 		double x = mino.getMinoX();
 		// A押下
 		if (GameLib.isKeyOn("A")) {
-			mino.moveLeft(ojamaMino);
+			mino.moveLeft(field);
 		}
 		// D押下
 		if (GameLib.isKeyOn("D")) {
-			mino.moveRight(ojamaMino);
+			mino.moveRight(field);
 		}
 
 		mino.show(canvas);
