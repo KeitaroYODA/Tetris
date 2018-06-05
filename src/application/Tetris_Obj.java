@@ -49,6 +49,7 @@ public class Tetris_Obj {
 		canvas.fillText(this.message, 60, 50 );
 	}
 
+	/*
 	// ランダムに異なる形のミノを返す
 	private Mino getMino() {
 		double rand = Math.random() * 10;
@@ -65,7 +66,7 @@ public class Tetris_Obj {
 			mino = new Mino5();
 		}
 		return mino;
-	}
+	}*/
 
 	// 背景の表示
 	private void showBackground() {
@@ -104,7 +105,7 @@ public class Tetris_Obj {
 		canvas.setFill(Color.BLACK);
 		canvas.fillRect(minoX, minoY, minoW, minoH);
 
-		nextMino = this.getMino();
+		nextMino = Mino.getMino();
 		nextMino.setMinoX(minoX + 10);
 		nextMino.setMinoY(minoY + 10);
 		nextMino.show(canvas);
@@ -130,7 +131,7 @@ public class Tetris_Obj {
 			this.showBackground();
 
 			// ミノ作成
-			mino = this.getMino();
+			mino = Mino.getMino();
 			// 背景作成
 			ojamaMino = new OjamaMino();
 
@@ -145,7 +146,7 @@ public class Tetris_Obj {
 
 			// 参照を渡しているのでだめ
 			//this.mino = (Mino)nextMino.clone();
-			mino = this.getMino();
+			mino = Mino.getMino();
 			// 次のミノ画面を表示
 			this.showNextMino();
 			this.gameStatus = 1;

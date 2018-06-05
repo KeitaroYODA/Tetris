@@ -12,27 +12,6 @@ class OjamaMino {
 	private static final int COL = 16; // 列数
 	private static final int ROW = 18; // 行数
 	
-	// 落下中のミノ
-	Mino mino;
-	
-	// ランダムに異なる形のミノを返す
-	private Mino getMino() {
-		double rand = Math.random() * 10;
-		Mino mino;
-		if (rand <= 2) {
-			mino = new Mino1();
-		} else if ((rand >= 3) && (rand <= 4)) {
-			mino = new Mino2();
-		} else if ((rand >= 5) && (rand <= 6)) {
-			mino = new Mino3();
-		} else if ((rand >= 7) && (rand <= 8)) {
-			mino = new Mino4();
-		} else {
-			mino = new Mino5();
-		}
-		return mino;
-	}
-	
 	// 画面に表示されるパネルオブジェクトを格納
 	private Panel[][] panelArray = new Panel[COL][ROW];
 

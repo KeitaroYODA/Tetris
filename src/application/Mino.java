@@ -33,10 +33,29 @@ abstract class Mino implements Cloneable{
 	// パネルの表示位置を格納
 	protected double panelPositionArray[][] = new double[PANEL_NUM][2];
 
+	// ミノを構成するパネルオブジェクトを返す
 	public Panel getPanel(int i) {
 		return panelArray[i];
 	}
 
+	// ランダムに異なる形状のミノのオブジェクトを返す
+	public static Mino getMino() {
+		double rand = Math.random() * 10;
+		Mino mino;
+		if (rand <= 2) {
+			mino = new Mino1();
+		} else if ((rand >= 3) && (rand <= 4)) {
+			mino = new Mino2();
+		} else if ((rand >= 5) && (rand <= 6)) {
+			mino = new Mino3();
+		} else if ((rand >= 7) && (rand <= 8)) {
+			mino = new Mino4();
+		} else {
+			mino = new Mino5();
+		}
+		return mino;
+	}
+	
 	// ミノを削除する
 	protected void clear(GraphicsContext canvas) {
 		double x = 0;
