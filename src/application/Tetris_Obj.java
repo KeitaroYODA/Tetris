@@ -9,22 +9,23 @@ import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
 public class Tetris_Obj {
 
-	private String message = "ゲームタイトル";
+	// フレーム間引き
 	private long execTime = System.nanoTime();
 	private long nanoTime = 100000000;
 
 	// サウンド
 	private final AudioClip mediaTurn = new AudioClip(new File("turn.mp3").toURI().toString()); // ブロック回転
 	private final AudioClip mediaColision = new AudioClip(new File("colision.mp3").toURI().toString()); // ブロック衝突
-	private final AudioClip mediaRemove = new AudioClip(new File("remove.mp3").toURI().toString()); // ブロック消滅
+	//private final AudioClip mediaRemove = new AudioClip(new File("remove.mp3").toURI().toString()); // ブロック消滅
 
 	// 0:初期表示、1:ブロック初期化、2:ブロック移動中、3:ポーズ
 	private Integer gameStatus = 0;
-
-	private int score = 0;
-	private int gameLevel = 1;
-
-	// ミノ
+	
+	// ゲーム情報
+	private int score = 0; // スコア
+	private int gameLevel = 1; // レベル
+	private String message = "";
+	
 	private Mino mino; // 落下中のミノ
 	private Mino nextMino; // 次に表示されるミノ
 	private Field field; // パネル表示領域
@@ -51,95 +52,24 @@ public class Tetris_Obj {
 	private final double magicW = Panel.panelW() * 6;
 	private final double magicH = Panel.panelH() * 3;
 
-	// メッセージの表示
-	private void showMessage() {
-		GraphicsContext canvas = GameLib.getGC();
-		canvas.setFill(Color.WHITE);
-		canvas.fillText(this.message, 60, 50 );
-	}
-
-	// 背景の表示
-	private void showBackground() {
-		// 背景の１パネルあたりの表示サイズ
-		int panelW = 20;
-
-		GraphicsContext canvas = GameLib.getGC();
-		Image img = new Image(new File("tile.png").toURI().toString());
-		WritableImage resizedImage = new WritableImage(img.getPixelReader(),64, 192, (int) (img.getWidth() / 8), (int) (img.getHeight() / 8));
-
-		int col = GameLib.width() / panelW;
-		int row = GameLib.height() / panelW;
-
-		int x,y;
-		for (int i = 0; i < col; i++) {
-			for (int l = 0; l < row; l++) {
-				x = i * panelW;
-				y = l * panelW;
-				canvas.drawImage(resizedImage,x, y, panelW, panelW);
-			}
-		}
-	}
-
-	// 得点表示
-	private void showScore() {
-		GraphicsContext canvas = GameLib.getGC();
-		canvas.setFill(Color.BLACK);
-		canvas.fillRect(scoreX, scoreY, scoreW, scoreH);
-		canvas.setFill(Color.WHITE);
-		canvas.fillText("スコア：" + this.score, scoreX + Panel.panelW(), scoreY + Panel.panelW());
-	}
-
-	// 次のミノ表示
-	private void showNextMino() {
-		GraphicsContext canvas = GameLib.getGC();
-		canvas.setFill(Color.BLACK);
-		canvas.fillRect(nextX, nextY, nextW, nextH);
-
-		nextMino = Mino.getMino();
-		nextMino.setMinoX(nextX + Panel.panelW());
-		nextMino.setMinoY(nextY + Panel.panelH());
-		nextMino.show(canvas);
-	}
-
-	// レベル表示
-	private void showLevel() {
-		GraphicsContext canvas = GameLib.getGC();
-		canvas.setFill(Color.BLACK);
-		canvas.fillRect(levelX, levelY, levelW, levelH);
-		canvas.setFill(Color.WHITE);
-		canvas.fillText("LV：" + this.gameLevel, levelX + Panel.panelW(), levelY + Panel.panelW());
-	}
-
-	// 魔法のストック表示
-	private void showMagic() {
-		GraphicsContext canvas = GameLib.getGC();
-		canvas.setFill(Color.BLACK);
-		canvas.fillRect(magicX, magicY, magicW, magicH);
-	}
-
 	// このメソッドが1秒間に60回ぐらい呼ばれるので
 	// テトリスの内部処理をここに書く
 	public void update() {
 
 		// 不要なフレームを間引く
 		long now = System.nanoTime();
-		if (now - execTime < (nanoTime - (gameLevel * 1000000))) {
-			return;
-		}
+		if (now - execTime < nanoTime) {return;}
 		this.execTime = now;
 
 		GraphicsContext canvas = GameLib.getGC();
 
 		switch(this.gameStatus) {
 		case 0: // 画面の初期化
-
+			this.message = "TETRIS SMILE";
 			this.field = new Field();
 			this.mino = Mino.getMino();
-
-			// 画面の初期化
 			this.showBackground();
 			this.showNextMino();
-
 			this.gameStatus = 1;
 			break;
 
@@ -164,7 +94,7 @@ public class Tetris_Obj {
 				isKeyOn = true;
 				this.mino.moveRight(field);
 			}
-			if (GameLib.isKeyOn("H")) {
+			if (GameLib.isKeyOn("L")) {
 				// 左へ回転
 				isKeyOn = true;
 				mediaTurn.play();
@@ -187,13 +117,13 @@ public class Tetris_Obj {
 			if (this.mino.colision(this.field)) {
 
 				// ゲームオーバの判定
-				if (this.mino.gameOver()) {
+				if (this.mino.isGameOver()) {
 					this.gameStatus = 4;
 					return;
 				}
 
-				// 接地したらおじゃまミノ化する
-				field.addMinoPanel(mino);
+				// 接地したらおじゃまミノとして積み上げる
+				mino.setPanel2Field(field);
 
 				// おじゃまミノが1行でも揃っているかチェック
 				int removeRow = field.checkOjamaMinoRow();
@@ -201,11 +131,12 @@ public class Tetris_Obj {
 
 					this.score = this.score + (removeRow * 100);
 					this.gameLevel++;
-					mediaRemove.play();
+					//mediaRemove.play();
 
 					// おじゃまミノを削除
 					field.removeOjamaMinoRow();
 				}
+				// GameOver時にこの条件式に入っていない。音がなっていないので。
 				// 衝突音を鳴らす
 				mediaColision.play();
 
@@ -253,5 +184,70 @@ public class Tetris_Obj {
 		this.showLevel();
 		this.showMagic();
 		this.showMessage();
+	}
+	
+	// メッセージの表示
+	private void showMessage() {
+		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.WHITE);
+		canvas.fillText(this.message, 60, 50 );
+	}
+
+	// 背景の表示
+	private void showBackground() {
+
+		GraphicsContext canvas = GameLib.getGC();
+		
+		Image img = new Image(new File("tile.png").toURI().toString());
+		WritableImage resizedImage = new WritableImage(img.getPixelReader(),64, 192, (int) (img.getWidth() / 8), (int) (img.getHeight() / 8));
+
+		int col = GameLib.width() / (int) Panel.panelW();
+		int row = GameLib.height() / (int) Panel.panelH();
+
+		int x,y;
+		for (int i = 0; i < col; i++) {
+			for (int l = 0; l < row; l++) {
+				x = i * (int) Panel.panelW();
+				y = l * (int) Panel.panelH();
+				canvas.drawImage(resizedImage,x, y, Panel.panelW(), Panel.panelH());
+			}
+		}
+	}
+
+	// 得点表示
+	private void showScore() {
+		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.BLACK);
+		canvas.fillRect(scoreX, scoreY, scoreW, scoreH);
+		canvas.setFill(Color.WHITE);
+		canvas.fillText("スコア：" + this.score, scoreX + Panel.panelW(), scoreY + Panel.panelW());
+	}
+
+	// 次のミノ表示
+	private void showNextMino() {
+		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.BLACK);
+		canvas.fillRect(nextX, nextY, nextW, nextH);
+
+		nextMino = Mino.getMino();
+		nextMino.setMinoX(nextX + Panel.panelW());
+		nextMino.setMinoY(nextY + Panel.panelH());
+		nextMino.show(canvas);
+	}
+
+	// レベル表示
+	private void showLevel() {
+		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.BLACK);
+		canvas.fillRect(levelX, levelY, levelW, levelH);
+		canvas.setFill(Color.WHITE);
+		canvas.fillText("LV：" + this.gameLevel, levelX + Panel.panelW(), levelY + Panel.panelW());
+	}
+
+	// 魔法のストック表示
+	private void showMagic() {
+		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.BLACK);
+		canvas.fillRect(magicX, magicY, magicW, magicH);
 	}
 }

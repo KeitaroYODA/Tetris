@@ -11,37 +11,14 @@ class Field {
 	private static final int ROW = 18; // 行数
 
 	// 画面に表示されるパネルオブジェクトを格納
-	//private Panel[][] panelArray = new Panel[COL][ROW];
 	private Panel[][] panelArray = new Panel[ROW][COL];
 
-	// おじゃまミノを構成するパネルオブジェクトの配列を返す
-	public Panel[][] getPanelArray() {
-		return this.panelArray;
-	}
-
 	public Field() {
+		// 配列初期化
 		for (int i = 0; i < ROW; i++) {
 			for (int l = 0; l < COL; l++) {
 				this.panelArray[i][l] = null;
 			}
-		}
-	}
-
-	// ミノがおじゃまミノまたは画面下に接触した際に
-	// おじゃまミノ化する
-	public void addMinoPanel(Mino mino) {
-		// ミノの左上の座標を取得
-		double minoX = mino.getMinoX();
-		double minoY = mino.getMinoY();
-
-		for (int i = 0; i < Mino.PANEL_NUM; i++) {
-			double panelX = (mino.panelPositionArray[i][0] * Panel.panelW()) - Panel.panelW();
-			double panelY = (mino.panelPositionArray[i][1] * Panel.panelH()) - Panel.panelH();
-
-			// パネルの座標の位置から配列のインデックスを取得してパネルオブジェクトを格納
-			int col = (int) ((int)(minoX + panelX) / Panel.panelW());
-			int row = (int) ((int)(minoY + panelY) / Panel.panelH());
-			this.panelArray[row][col] = mino.getPanel(i);
 		}
 	}
 
@@ -60,7 +37,7 @@ class Field {
 				}
 			}
 
-			// １行でも揃っていれば真を返す
+			// 行が揃っている
 			if (check) {
 				checkNum++;
 			}
@@ -85,7 +62,6 @@ class Field {
 				}
 			}
 
-			// 揃った行のを削除する
 			// 揃っている行はコピーしない
 			if (!check) {
 				for (int l = 0; l < COL; l++) {
@@ -125,5 +101,13 @@ class Field {
 
 	public static int ROW() {
 		return ROW;
+	}
+	
+	public Panel[][] getPanelArray() {
+		return this.panelArray;
+	}
+
+	public void setPanelArray(Panel[][] panelArray) {
+		this.panelArray = panelArray;
 	}
 }

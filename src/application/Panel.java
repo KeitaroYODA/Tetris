@@ -16,15 +16,14 @@ class Panel {
 	// パネル画像
 	private WritableImage resizedImage;
 
-	public Panel(int x, int y) {
-		Image img = new Image(new File("tile.png").toURI().toString());
+	public Panel(String imgFile, int x, int y) {
+		Image img = new Image(new File(imgFile).toURI().toString());
 		resizedImage = new WritableImage(img.getPixelReader(),x, y, (int) (img.getWidth() / 16), (int) (img.getHeight() / 16));
 	}
 
 	// パネルの画像オブジェクトを返す
 	public Image getImage() {
 		return resizedImage;
-		//return img;
 	}
 
 	// パネルのサイズ（幅）を返す
