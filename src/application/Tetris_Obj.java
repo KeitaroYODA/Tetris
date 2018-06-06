@@ -11,41 +11,50 @@ public class Tetris_Obj {
 
 	private String message = "ゲームタイトル";
 	private long execTime = System.nanoTime();
+	private long nanoTime = 100000000;
 
 	// サウンド
 	private final AudioClip mediaTurn = new AudioClip(new File("turn.mp3").toURI().toString()); // ブロック回転
 	private final AudioClip mediaColision = new AudioClip(new File("colision.mp3").toURI().toString()); // ブロック衝突
+	private final AudioClip mediaRemove = new AudioClip(new File("remove.mp3").toURI().toString()); // ブロック消滅
 
 	// 0:初期表示、1:ブロック初期化、2:ブロック移動中、3:ポーズ
 	private Integer gameStatus = 0;
+
+	private int score = 0;
+	private int gameLevel = 1;
 
 	// ミノ
 	private Mino mino; // 落下中のミノ
 	private Mino nextMino; // 次に表示されるミノ
 	private Field field; // パネル表示領域
 
-	// 画面表示
-	// テトリス画面
-	/*
-	private static final double mainX = 0;
-	private static final double mainY = 0;
-	private static final double mainW = Panel.panelW() * 16;
-	private static final double mainH = Panel.panelH() * 18;
-	*/
-	// 得点画面
-	private static final double countX = Panel.panelW() * 17;
-	private static final double countY = Panel.panelW() * 1;
-	private static final double countW = Panel.panelW() * 12;
-	private static final double countH = Panel.panelH() * 3;
-	// 次のミノ画面
-	private final double minoX = Panel.panelW() * 17;
-	private final double minoY = Panel.panelW() * 5;
-	private final double minoW = Panel.panelW() * 5;
-	private final double minoH = Panel.panelH() * 6;
+	// 画面レイアウト
+	// 得点表示
+	private static final double scoreX = Panel.panelW() * 17;
+	private static final double scoreY = Panel.panelW() * 1;
+	private static final double scoreW = Panel.panelW() * 13;
+	private static final double scoreH = Panel.panelH() * 3;
+	// 次のミノ表示
+	private final double nextX = Panel.panelW() * 17;
+	private final double nextY = Panel.panelW() * 5;
+	private final double nextW = Panel.panelW() * 6;
+	private final double nextH = Panel.panelH() * 6;
+	// レベル表示
+	private final double levelX = Panel.panelW() * 24;
+	private final double levelY = Panel.panelW() * 5;
+	private final double levelW = Panel.panelW() * 6;
+	private final double levelH = Panel.panelH() * 2;
+	// 魔法ストック表示
+	private final double magicX = Panel.panelW() * 24;
+	private final double magicY = Panel.panelW() * 8;
+	private final double magicW = Panel.panelW() * 6;
+	private final double magicH = Panel.panelH() * 3;
 
 	// メッセージの表示
 	private void showMessage() {
 		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.WHITE);
 		canvas.fillText(this.message, 60, 50 );
 	}
 
@@ -72,24 +81,40 @@ public class Tetris_Obj {
 	}
 
 	// 得点表示
-	private void showCount() {
+	private void showScore() {
 		GraphicsContext canvas = GameLib.getGC();
 		canvas.setFill(Color.BLACK);
-		canvas.fillRect(countX, countY, countW, countH);
+		canvas.fillRect(scoreX, scoreY, scoreW, scoreH);
 		canvas.setFill(Color.WHITE);
-		canvas.fillText("ここに得点が表示される", countX + Panel.panelW(), countY + Panel.panelW());
+		canvas.fillText("スコア：" + this.score, scoreX + Panel.panelW(), scoreY + Panel.panelW());
 	}
 
 	// 次のミノ表示
 	private void showNextMino() {
 		GraphicsContext canvas = GameLib.getGC();
 		canvas.setFill(Color.BLACK);
-		canvas.fillRect(minoX, minoY, minoW, minoH);
+		canvas.fillRect(nextX, nextY, nextW, nextH);
 
 		nextMino = Mino.getMino();
-		nextMino.setMinoX(minoX + 10);
-		nextMino.setMinoY(minoY + 10);
+		nextMino.setMinoX(nextX + Panel.panelW());
+		nextMino.setMinoY(nextY + Panel.panelH());
 		nextMino.show(canvas);
+	}
+
+	// レベル表示
+	private void showLevel() {
+		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.BLACK);
+		canvas.fillRect(levelX, levelY, levelW, levelH);
+		canvas.setFill(Color.WHITE);
+		canvas.fillText("LV：" + this.gameLevel, levelX + Panel.panelW(), levelY + Panel.panelW());
+	}
+
+	// 魔法のストック表示
+	private void showMagic() {
+		GraphicsContext canvas = GameLib.getGC();
+		canvas.setFill(Color.BLACK);
+		canvas.fillRect(magicX, magicY, magicW, magicH);
 	}
 
 	// このメソッドが1秒間に60回ぐらい呼ばれるので
@@ -98,167 +123,135 @@ public class Tetris_Obj {
 
 		// 不要なフレームを間引く
 		long now = System.nanoTime();
-		if (now - execTime < 100000000) {
+		if (now - execTime < (nanoTime - (gameLevel * 1000000))) {
 			return;
 		}
 		this.execTime = now;
 
 		GraphicsContext canvas = GameLib.getGC();
 
-		if (this.gameStatus == 0) {
-			// 初回表示時またはゲームオーバ後の再開時に実行される
-			this.gameStatus = 1;
-			canvas.clearRect(0, 0, GameLib.width(), GameLib.height());
+		switch(this.gameStatus) {
+		case 0: // 画面の初期化
+
+			this.field = new Field();
+			this.mino = Mino.getMino();
+
+			// 画面の初期化
 			this.showBackground();
-
-			// ミノ作成
-			mino = Mino.getMino();
-			
-			// 背景作成
-			field = new Field();
-
-			// 次のミノ画面を表示
 			this.showNextMino();
-			this.showCount();
-		}
-		// 次にミノをミノにセットして最上段に表示
-		else if (this.gameStatus == 3) {
-			// おじゃまミノの行が揃っていれば１行削除
 
-
-			// 参照を渡しているのでだめ
-			//this.mino = (Mino)nextMino.clone();
-			mino = Mino.getMino();
-			// 次のミノ画面を表示
-			this.showNextMino();
 			this.gameStatus = 1;
+			break;
 
-		}
-		else if (this.gameStatus == 4) {
-			canvas.setFill(Color.WHITE);
-			canvas.fillText("ゲームオーバーしました。。。PRESS ENTER ", 60, 50 );
+		case 1: // ミノ落下中。。。
+			this.message = "";
 
-			// ENTER押下
-			if (GameLib.isKeyOn("ENTER")) {
-				this.gameStatus = 0;
-			}
-			return;
-
-		} else if (this.gameStatus == 5) {
-
-			// E押下
-			if (GameLib.isKeyOn("E")) {
-				this.gameStatus = 1;
-			}
-
-			canvas.setFill(Color.WHITE);
-			canvas.fillText("PAUSE。。。PRESS E ", 60, 50 );
-			return;
-		}
-
-		// 以前のミノを削除してから背景を表示
-		mino.clear(canvas);
-
-		// L押下
-		if (GameLib.isKeyOn("L")) {
-			mediaTurn.play();
-			mino.turnLeft();
-		}
-
-		// ミノ落下
-		double y = mino.getMinoY() + (Panel.panelH() / 2);
-		mino.setMinoY(y);
-
-		// ミノの衝突判定
-		if (mino.colision(field)) {
-
-			// ゲームオーバの判定
-			if (mino.gameOver()) {
-				// ゲームオーバー
-				this.gameStatus = 4;
+			// キー操作
+			if (GameLib.isKeyOn("P")) {
+				// ポーズ
+				this.gameStatus = 5;
 				return;
 			}
 
-			// おじゃまミノが揃っているかチェック
-			if (field.checkOjamaMinoRow()) {
-				canvas.setFill(Color.WHITE);
-				canvas.fillText("列がそろいました。。。", 60, 50 );
+			boolean isKeyOn = false;
+			if (GameLib.isKeyOn("A")) {
+				// 左へ移動
+				isKeyOn = true;
+				this.mino.moveLeft(field);
+			}
+			if (GameLib.isKeyOn("D")) {
+				// 右へ移動
+				isKeyOn = true;
+				this.mino.moveRight(field);
+			}
+			if (GameLib.isKeyOn("H")) {
+				// 左へ回転
+				isKeyOn = true;
+				mediaTurn.play();
+				this.mino.turnLeft(field);
+			}
+			if (GameLib.isKeyOn("P")) {
+				// 魔法（メラ）発動
+
+				// MPチェック実施
+
+				this.gameStatus = 6;
 			}
 
-			// 接地したらおじゃまミノ化する
-			field.addMinoPanel(mino);
-			field.show(canvas);
-			
-			// 衝突音を鳴らす
-			mediaColision.play();
-			
-			this.gameStatus = 3;
-			return;
-		}
+			// 左右への移動中または回転中は落下が止まる
+			if (!isKeyOn) {
+				this.mino.moveDown(this.field);
+			}
 
-		field.show(canvas);
+			// ミノの衝突判定←いらないかも？
+			if (this.mino.colision(this.field)) {
 
-		// ミノ操作
-		double x = mino.getMinoX();
-		// A押下
-		if (GameLib.isKeyOn("A")) {
-			mino.moveLeft(field);
-		}
-		// D押下
-		if (GameLib.isKeyOn("D")) {
-			mino.moveRight(field);
-		}
+				// ゲームオーバの判定
+				if (this.mino.gameOver()) {
+					this.gameStatus = 4;
+					return;
+				}
 
-		mino.show(canvas);
+				// 接地したらおじゃまミノ化する
+				field.addMinoPanel(mino);
 
-		// P押下
-		if (GameLib.isKeyOn("P")) {
-			this.gameStatus = 5;
-		}
+				// おじゃまミノが1行でも揃っているかチェック
+				int removeRow = field.checkOjamaMinoRow();
+				if (removeRow > 0) {
 
+					this.score = this.score + (removeRow * 100);
+					this.gameLevel++;
+					mediaRemove.play();
 
-		//GraphicsContext canvas = GameLib.getGC();
-		//canvas.fillRect(this.block.x(), this.block.y(), this.block.width(), this.block.height());
+					// おじゃまミノを削除
+					field.removeOjamaMinoRow();
+				}
+				// 衝突音を鳴らす
+				mediaColision.play();
 
-		/*
-		switch(this.gameStatus) {
-			case 0:
-			// 画面の背景表示、初期化処理
-				this.showInit();
+				this.gameStatus = 3;
+			}
+
+			break;
+
+		case 2: // 1行ブロックが揃ったアニメ
+			break;
+		case 3: // 新しいミノを表示
+			this.nextMino.init();
+			this.mino = this.nextMino;
+
+			this.nextMino = Mino.getMino();
+			this.showNextMino();
+			this.gameStatus = 1;
+			break;
+
+		case 4: // ゲームオーバー画面
+			this.message = "ゲームオーバーしました。。。PRESS ENTER ";
+
+			if (GameLib.isKeyOn("ENTER")) {
+				this.gameStatus = 0;
+			}
+
+			break;
+
+		case 5: // ポーズ中画面
+			if (GameLib.isKeyOn("E")) {
 				this.gameStatus = 1;
-				break;
-			case 1:
-			// ブロック初期化
-				this.createBlock();
-				//this.showBlock();
-				this.gameStatus = 2;
-				break;
-			case 2:
-			// ブロック落下中
+			}
+			this.message = "PAUSE。。。PRESS E ";
+			break;
+		case 6: // 魔法（メラ）
 
 
-				// P押下
-				if (GameLib.isKeyOn("P")) {
 
-				}
-
-				// O押下
-				if (GameLib.isKeyOn("O")) {
-
-				}
-				this.blockY = this.blockY + 0.1;
-				//this.showBlock();
 			break;
 		}
-		// デフォルト処理
-		// 　背景の表示
-		// 　キャラクタの表示
-		// 　ゲームタイトルの表示
-*/
 
-
-
+		this.field.show(canvas);
+		this.mino.show(canvas);
+		this.showScore();
+		this.showLevel();
+		this.showMagic();
 		this.showMessage();
 	}
 }
-
