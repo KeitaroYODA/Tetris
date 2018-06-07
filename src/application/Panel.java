@@ -13,7 +13,7 @@ class Panel {
 	// パネル高さ
 	private static final double panelH = 20;
 
-	// パネル画像
+	// 画像オブジェクト
 	private WritableImage resizedImage;
 
 	public Panel(String imgFile, int x, int y) {

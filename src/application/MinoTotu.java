@@ -4,10 +4,10 @@ package application;
 class MinoTotu extends Mino {
 	public MinoTotu() {
 		super();
-		
+
 		// ミノを構成するパネルの画像を指定
 		this.tileX = 192;
-		this.makePanel();
+		this.initPanel();
 
 		// ミノを構成するパネルの位置を指定
 		// 0:パネルの横位置、1:パネルの縦位置

@@ -11,43 +11,43 @@ public class Tetris_Obj {
 
 	// フレーム間引き
 	private long execTime = System.nanoTime();
-	private long nanoTime = 100000000;
+	private long nanoTime = 50000000;
 
 	// サウンド
 	private final AudioClip mediaTurn = new AudioClip(new File("turn.mp3").toURI().toString()); // ブロック回転
 	private final AudioClip mediaColision = new AudioClip(new File("colision.mp3").toURI().toString()); // ブロック衝突
-	//private final AudioClip mediaRemove = new AudioClip(new File("remove.mp3").toURI().toString()); // ブロック消滅
+	private final AudioClip mediaRemove = new AudioClip(new File("remove.mp3").toURI().toString()); // ブロック消滅
 
 	// 0:初期表示、1:ブロック初期化、2:ブロック移動中、3:ポーズ
 	private Integer gameStatus = 0;
-	
+
 	// ゲーム情報
 	private int score = 0; // スコア
 	private int gameLevel = 1; // レベル
 	private String message = "";
-	
+
 	private Mino mino; // 落下中のミノ
 	private Mino nextMino; // 次に表示されるミノ
 	private Field field; // パネル表示領域
 
 	// 画面レイアウト
 	// 得点表示
-	private static final double scoreX = Panel.panelW() * 17;
+	private static final double scoreX = Panel.panelW() * 18;
 	private static final double scoreY = Panel.panelW() * 1;
 	private static final double scoreW = Panel.panelW() * 13;
 	private static final double scoreH = Panel.panelH() * 3;
 	// 次のミノ表示
-	private final double nextX = Panel.panelW() * 17;
+	private final double nextX = Panel.panelW() * 18;
 	private final double nextY = Panel.panelW() * 5;
 	private final double nextW = Panel.panelW() * 6;
 	private final double nextH = Panel.panelH() * 6;
 	// レベル表示
-	private final double levelX = Panel.panelW() * 24;
+	private final double levelX = Panel.panelW() * 25;
 	private final double levelY = Panel.panelW() * 5;
 	private final double levelW = Panel.panelW() * 6;
 	private final double levelH = Panel.panelH() * 2;
 	// 魔法ストック表示
-	private final double magicX = Panel.panelW() * 24;
+	private final double magicX = Panel.panelW() * 25;
 	private final double magicY = Panel.panelW() * 8;
 	private final double magicW = Panel.panelW() * 6;
 	private final double magicH = Panel.panelH() * 3;
@@ -75,14 +75,14 @@ public class Tetris_Obj {
 
 		case 1: // ミノ落下中。。。
 			this.message = "";
-
+			this.mino.clear(canvas);
+//this.gameLevel = 5;
 			// キー操作
 			if (GameLib.isKeyOn("P")) {
 				// ポーズ
 				this.gameStatus = 5;
 				return;
 			}
-
 			boolean isKeyOn = false;
 			if (GameLib.isKeyOn("A")) {
 				// 左へ移動
@@ -97,59 +97,51 @@ public class Tetris_Obj {
 			if (GameLib.isKeyOn("L")) {
 				// 左へ回転
 				isKeyOn = true;
-				mediaTurn.play();
 				this.mino.turnLeft(field);
-			}
-			if (GameLib.isKeyOn("P")) {
-				// 魔法（メラ）発動
-
-				// MPチェック実施
-
-				this.gameStatus = 6;
+				mediaTurn.play();
 			}
 
 			// 左右への移動中または回転中は落下が止まる
 			if (!isKeyOn) {
-				this.mino.moveDown(this.field);
+				this.mino.moveDown(this.field, this.gameLevel);
 			}
 
-			// ミノの衝突判定←いらないかも？
+			// ミノが着地した
 			if (this.mino.colision(this.field)) {
-
-				// ゲームオーバの判定
-				if (this.mino.isGameOver()) {
-					this.gameStatus = 4;
-					return;
-				}
-
-				// 接地したらおじゃまミノとして積み上げる
+				// ミノをフィールドに積み上げる
 				mino.setPanel2Field(field);
 
-				// おじゃまミノが1行でも揃っているかチェック
-				int removeRow = field.checkOjamaMinoRow();
+				// ミノを削除する行があるかチェック
+				int removeRow = field.checkRemoveRow();
 				if (removeRow > 0) {
-
+					// 削除した行数に応じてスコアを加算
 					this.score = this.score + (removeRow * 100);
+
+					// レベルの上限が5しかない。。。
 					this.gameLevel++;
-					//mediaRemove.play();
+					if (this.gameLevel > 5) {
+						this.gameLevel--;
+					}
 
-					// おじゃまミノを削除
-					field.removeOjamaMinoRow();
+					field.removeRow();
+					mediaRemove.play();
 				}
-				// GameOver時にこの条件式に入っていない。音がなっていないので。
-				// 衝突音を鳴らす
-				mediaColision.play();
 
+				mediaColision.play();
 				this.gameStatus = 3;
 			}
 
 			break;
 
-		case 2: // 1行ブロックが揃ったアニメ
-			break;
 		case 3: // 新しいミノを表示
 			this.nextMino.init();
 			this.mino = this.nextMino;
+
+			// ゲームオーバの判定
+			if (this.mino.colision(field)) {
+				this.gameStatus = 4;
+				return;
+			}
 
 			this.nextMino = Mino.getMino();
 			this.showNextMino();
@@ -171,11 +163,6 @@ public class Tetris_Obj {
 			}
 			this.message = "PAUSE。。。PRESS E ";
 			break;
-		case 6: // 魔法（メラ）
-
-
-
-			break;
 		}
 
 		this.field.show(canvas);
@@ -185,7 +172,7 @@ public class Tetris_Obj {
 		this.showMagic();
 		this.showMessage();
 	}
-	
+
 	// メッセージの表示
 	private void showMessage() {
 		GraphicsContext canvas = GameLib.getGC();
@@ -197,7 +184,7 @@ public class Tetris_Obj {
 	private void showBackground() {
 
 		GraphicsContext canvas = GameLib.getGC();
-		
+
 		Image img = new Image(new File("tile.png").toURI().toString());
 		WritableImage resizedImage = new WritableImage(img.getPixelReader(),64, 192, (int) (img.getWidth() / 8), (int) (img.getHeight() / 8));
 
@@ -228,10 +215,9 @@ public class Tetris_Obj {
 		GraphicsContext canvas = GameLib.getGC();
 		canvas.setFill(Color.BLACK);
 		canvas.fillRect(nextX, nextY, nextW, nextH);
-
 		nextMino = Mino.getMino();
-		nextMino.setMinoX(nextX + Panel.panelW());
-		nextMino.setMinoY(nextY + Panel.panelH());
+		nextMino.setMinoX(nextX);
+		nextMino.setMinoY(nextY);
 		nextMino.show(canvas);
 	}
 
