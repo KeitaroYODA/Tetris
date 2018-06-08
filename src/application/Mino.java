@@ -36,7 +36,8 @@ abstract class Mino implements Cloneable{
 	public Mino() {
 		this.init();
 
-		//20の約数である1,2,4,5,10を指定
+		// 20の約数である1,2,4,5,10を指定
+		// 5段階以上のレベルを設定できないので要修正
 		this.speedByLevel[0] = 1;
 		this.speedByLevel[1] = 2;
 		this.speedByLevel[2] = 4;
@@ -73,8 +74,6 @@ abstract class Mino implements Cloneable{
 	// ミノ落下
 	protected void moveDown(Field field, int level) {
 
-		//20の約数である1,2,4,5,10以外は無理
-		//double moveY = this.minoY + (Panel.panelH() / 2);
 		double moveY = this.minoY + this.getSpeedByLevel(level);
 
 		// ミノがパネルに接するときだけ判定する
@@ -98,10 +97,12 @@ abstract class Mino implements Cloneable{
 	}
 
 	protected  double getSpeedByLevel(int level) {
-		double speed = 0;
-		if (level < 5) {
+		double speed = this.speedByLevel[0];
+
+		if (level <= 5) {
 			speed = this.speedByLevel[level - 1];
 		}
+
 		return speed;
 	}
 

@@ -11,7 +11,7 @@ public class Tetris_Obj {
 
 	// フレーム間引き
 	private long execTime = System.nanoTime();
-	private long nanoTime = 50000000;
+	private long nanoTime = 100000000;
 
 	// サウンド
 	private final AudioClip mediaTurn = new AudioClip(new File("turn.mp3").toURI().toString()); // ブロック回転
@@ -76,7 +76,7 @@ public class Tetris_Obj {
 		case 1: // ミノ落下中。。。
 			this.message = "";
 			this.mino.clear(canvas);
-//this.gameLevel = 5;
+this.gameLevel = 5;
 			// キー操作
 			if (GameLib.isKeyOn("P")) {
 				// ポーズ
